@@ -1,10 +1,9 @@
-from ai.neuralnetwork import *
+from nn import *
 
 
 def train():
     nn = NeuralNetwork(4, [2, 1])
 
-    print(np.zeros((4, 1)))
     print(nn.run(np.zeros((4, 10))))
 
 
