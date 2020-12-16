@@ -40,14 +40,33 @@ class NeuralNetwork:
             self.layer_weights.append(weights)
 
             # biases of neurons in the current layer
-            biases = np.random.randn(layer_size)
+            biases = np.random.randn(next_layer_size, 1)
 
             self.layer_biases.append(biases)
 
     def layer_count(self) -> int:
         return len(self.layer_sizes)
 
-    def run(self, mat):
+    # def run(self, mat: np.ndarray) -> np.ndarray:
+    #
+    #     (n, m) = mat.shape
+    #
+    #     assert n == self.input_layer_size, "Invalid input vector length"
+    #
+    #     for i in range(self.layer_count()):
+    #
+    #         mat = self.layer_weights[i] @ mat
+    #
+    #         assert mat.shape[0] == self.layer_sizes[i]
+    #
+    #         # the linear combination with neuron connection weights has been computed
+    #         # so we only need to add bias terms and compute sigma of the result
+    #         for neuron in range(self.layer_sizes[i]):
+    #             mat[neuron] = sigma(mat[neuron] + self.layer_biases[i][neuron])
+    #
+    #     return mat
+
+    def run(self, mat: np.ndarray) -> np.ndarray:
 
         (n, m) = mat.shape
 
@@ -55,25 +74,32 @@ class NeuralNetwork:
 
         for i in range(self.layer_count()):
 
-            mat = self.layer_weights[i] @ mat
+            mat = self.layer_weights[i] @ mat + self.layer_biases[i]
 
             assert mat.shape[0] == self.layer_sizes[i]
+            assert mat.shape[1] == m
 
-            # the linear combination with neuron connection weights has been computed
-            # so we only need to add bias terms and compute sigma of the result
-            for neuron in range(self.layer_sizes[i]):
-                mat[neuron] = sigma(mat[neuron] + self.layer_biases[i][neuron])
+            # apply activation function
+            mat = sigma(mat)
 
         return mat
 
-    def run_single(self, inp):
-        return self.run(inp.transpose())
+    def run_list(self, inp: list) -> np.ndarray:
 
-    def compute_gradient(self, inp, out):
+        arr = np.array([inp]).T
+
+        return self.run(arr)[:, 0]
+
+    def compute_gradient(self, inp: np.ndarray, out: np.ndarray) -> (np.ndarray, np.ndarray):
+
+        bias_gradient = [np.zeros(bias.shape) for bias in self.layer_biases]
+        weight_gradient = [np.zeros(weight.shape) for weight in self.layer_weights]
+
         # TODO
-        return [], []
 
-    def gradient_descent(self, batch: list, learning_rate: float):
+        return bias_gradient, weight_gradient
+
+    def gradient_descent(self, batch: list, learning_rate: float) -> None:
         # in this method we compute the gradient for every example in the batch
         # with the computed gradient we can determine how the current training
         # example wants to adjust the weights/biases of the neural network
@@ -85,12 +111,17 @@ class NeuralNetwork:
 
         assert learning_rate > 0
 
+        # we want to average the contribution of every training example
+        learning_rate /= len(batch)
+
         # create a zeroed-out copy of the neural network
         weights_delta = [np.zeros(weight.shape) for weight in self.layer_weights]
         bias_delta = [np.zeros(bias.shape) for bias in self.layer_biases]
 
         for inp, out in batch:
-            # delta bias and delta weight
+            # compute how the current training example "wants"
+            # to change biases and weights of the neural network
+
             d_bias, d_weight = self.compute_gradient(inp, out)
 
             for i in range(self.layer_count()):
@@ -102,9 +133,6 @@ class NeuralNetwork:
         # how sensitive the weight/bias i, or, in other words, how some small change
         # of weight/bias i will affect the cost function that we want to minimize
         for i in range(self.layer_count()):
-            # compute the average delta
-            weights_delta[i] /= len(batch)
-            bias_delta[i] /= len(batch)
             # apply the average delta to the neural network
             self.layer_weights[i] -= learning_rate * weights_delta[i]
             self.layer_biases[i] -= learning_rate * bias_delta[i]
@@ -116,7 +144,6 @@ class NeuralNetwork:
         length = len(data)
 
         for e in range(epochs):
-
             # shuffle the data to then partition it into batches
             random.shuffle(data)
 
