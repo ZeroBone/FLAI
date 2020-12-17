@@ -1,4 +1,4 @@
-﻿"type","city","street","cost","area"
+"type","city","street","cost","area"
 "3er WG","Berlin Charlottenburg","Nehringstraße","450","24"
 "3er WG","Berlin Mitte","Otawistr. 32","697","17"
 "3er WG","Berlin Weißensee","Bitburger Str.","600","26"
@@ -2014,7 +2014,6 @@
 "3er WG","Berlin Neukölln","Neukölln","550","16"
 "3er WG","Berlin Buckow","Parchimer Allee","650","15"
 "1-Zimmer-Wohnung","Berlin Nähe Akazienkiez","Ebersstraße 11","675","39"
-"2er WG","Berlin Steglitz","Unter den Eichen","290","null"
 "3er WG","Berlin Neukölln","Friedelstraße 23","500","18"
 "3er WG","Berlin Neukölln","Friedelstraße 23","350","11"
 "2er WG","Berlin Kreuzberg","Tempelherrenstraße","500","19"

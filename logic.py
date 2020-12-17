@@ -62,7 +62,7 @@ def or_gate():
 
 
 def xor_gate():
-    nn = NeuralNetwork(2, [4, 2, 1])
+    nn = NeuralNetwork(2, [4, 4, 4, 1])
 
     training_data = [
         (
@@ -83,7 +83,7 @@ def xor_gate():
         )
     ]
 
-    nn.train(1000, training_data, 0.01, 4)
+    nn.train(1000, training_data, 10, 4)
 
     print(nn.run_list([0.0, 0.0]))
     print(nn.run_list([0.0, 1.0]))
