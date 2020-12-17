@@ -13,7 +13,7 @@ def sigma_derivative(x: float) -> float:
 
 class NeuralNetwork:
 
-    def __init__(self, input_layer_size: int, layer_sizes: list):
+    def __init__(self, input_layer_size: int, layer_sizes: list, layer_weights: list, layer_biases: list):
 
         assert input_layer_size >= 1
         assert len(layer_sizes) >= 1
@@ -21,30 +21,8 @@ class NeuralNetwork:
         self.input_layer_size = input_layer_size
         self.layer_sizes = layer_sizes
 
-        self.layer_weights = []
-
-        self.layer_biases = []
-
-        for i in range(self.layer_count()):
-
-            previous_layer_size = self.input_layer_size if i == 0 else layer_sizes[i - 1]
-            layer_size = layer_sizes[i]
-
-            assert previous_layer_size >= 1
-
-            # weights[i][j] = weight of the connection between
-            # neuron j of the previous layer and
-            # neuron i of the current layer
-            # the columns of this matrix are therefore the weight vectors
-            # and the rows are incoming weights for one neuron in the current layer
-            weights = np.random.randn(layer_size, previous_layer_size)
-
-            self.layer_weights.append(weights)
-
-            # biases of neurons in the current layer
-            biases = np.random.randn(layer_size, 1)
-
-            self.layer_biases.append(biases)
+        self.layer_weights = layer_weights
+        self.layer_biases = layer_biases
 
     def layer_count(self) -> int:
         return len(self.layer_sizes)
@@ -177,5 +155,62 @@ class NeuralNetwork:
             for start in range(0, length, batch_size):
                 self.gradient_descent(data[start:start + batch_size], learning_rate)
 
-            if (e+1) % 100 == 0:
+            if (e + 1) % 100 == 0:
                 print("Training epoch %d ended!" % (e + 1))
+
+    def save(self, name: str) -> None:
+
+        np.savez(
+            name + ".npz",
+            np.array([self.input_layer_size]),
+            np.array(self.layer_sizes),
+            np.array(self.layer_weights),
+            np.array(self.layer_biases)
+        )
+
+    @staticmethod
+    def load(file_name: str):
+
+        file = np.load(file_name, allow_pickle=True)
+
+        input_layer_size = file["arr_0"][0]
+
+        layer_sizes = file["arr_1"]
+
+        layer_weights = file["arr_2"]
+
+        layer_biases = file["arr_3"]
+
+        return NeuralNetwork(input_layer_size, layer_sizes, layer_weights, layer_biases)
+
+    @staticmethod
+    def generate(input_layer_size: int, layer_sizes: list):
+
+        assert input_layer_size >= 1
+        assert len(layer_sizes) >= 1
+
+        layer_weights = []
+
+        layer_biases = []
+
+        for i in range(len(layer_sizes)):
+            previous_layer_size = input_layer_size if i == 0 else layer_sizes[i - 1]
+            layer_size = layer_sizes[i]
+
+            assert previous_layer_size >= 1
+
+            # weights[i][j] = weight of the connection between
+            # neuron j of the previous layer and
+            # neuron i of the current layer
+            # the columns of this matrix are therefore the weight vectors
+            # and the rows are incoming weights for one neuron in the current layer
+            weights = np.random.randn(layer_size, previous_layer_size)
+
+            layer_weights.append(weights)
+
+            # biases of neurons in the current layer
+            biases = np.random.randn(layer_size, 1)
+
+            layer_biases.append(biases)
+
+        return NeuralNetwork(input_layer_size, layer_sizes, layer_weights, layer_biases)

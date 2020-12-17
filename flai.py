@@ -77,9 +77,9 @@ class Flat:
 
 def train(training_data: list) -> NeuralNetwork:
 
-    nn = NeuralNetwork(3, [3, 1])
+    nn = NeuralNetwork.generate(3, [3, 3, 1])
 
-    nn.train(100, training_data, 1, 10)
+    nn.train(2000, training_data, 0.1, 20)
 
     return nn
 
@@ -134,55 +134,31 @@ def read_data(file_name: str) -> list:
     return data
 
 
-def main() -> None:
-
-    data = read_data("data/berlin.csv")
-
-    test_samples = 100
-
-    # everything except the last test_samples elements
-    training_data = data[:-test_samples]
-    # last test_samples entries
-    test_data = data[-test_samples:]
-
-    print("Max cost: %d" % Flat.max_cost)
-    print("Max area: %d" % Flat.max_area)
-    print("Training data ready, training the neural network...")
-
-    nn = train(training_data)
-
-    print("Training done, testing...")
+def run_test(nn: NeuralNetwork, data: list) -> None:
 
     mse_avg = 0
-
     error_avg = 0
 
-    for inp, out in test_data:
-
+    for inp, out in data:
         predicted = nn.run(inp)
 
         error = out[0][0] - predicted[0][0]
-
-        print("Expected: %lf Predicted: %lf (%lf Euro) Error: %lf" % (
-            out[0][0],
-            predicted[0][0],
-            Flat.decode_cost(predicted[0][0]),
-            abs(error)
-        ))
 
         mse = error * error
         mse_avg += mse
 
         error_avg += abs(out[0][0] - predicted[0][0])
 
-        print("Error: %lf MSE: %lf" % (abs(out[0][0] - predicted[0][0]), mse))
+        print("Expected: %lf Predicted: %lf (%lf Euro) Error: %lf MSE: %lf" % (
+            out[0][0],
+            predicted[0][0],
+            Flat.decode_cost(predicted[0][0]),
+            abs(error),
+            mse
+        ))
 
-    mse_avg /= len(test_data)
-    error_avg /= len(test_data)
+    mse_avg /= len(data)
+    error_avg /= len(data)
 
     print("Average MSE: %lf" % mse_avg)
     print("Average Error: %lf (%lf Euro)" % (error_avg, Flat.decode_cost(error_avg)))
-
-
-if __name__ == "__main__":
-    main()
