@@ -177,4 +177,5 @@ class NeuralNetwork:
             for start in range(0, length, batch_size):
                 self.gradient_descent(data[start:start + batch_size], learning_rate)
 
-            # print("Training epoch %d ended!" % (e + 1))
+            if (e+1) % 100 == 0:
+                print("Training epoch %d ended!" % (e + 1))
