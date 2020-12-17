@@ -8,7 +8,13 @@ class Flat:
     type_ids = {}
     city_ids = {}
 
+    max_area = 0
+    max_cost = 0
+
     def __init__(self, flat_type: str, city: str, street: str, cost: int, area: int):
+
+        assert area > 0, "Invalid area"
+        assert cost > 0, "Invalid cost"
 
         self.flat_type = flat_type
         self.city = city
@@ -28,19 +34,37 @@ class Flat:
             self.city_id = len(Flat.city_ids)
             Flat.city_ids[self.city] = self.city_id
 
+        if self.area > Flat.max_area:
+            Flat.max_area = self.area
+
+        if self.cost > Flat.max_cost:
+            Flat.max_cost = self.cost
+
     def to_input_vector(self) -> np.ndarray:
 
+        assert Flat.max_area > 0
+
         return np.array([
-            [float(self.type_id)],
-            [float(self.city_id)],
-            [float(self.area)]
+            [self.type_id / len(Flat.type_ids)],
+            [self.city_id / len(Flat.city_ids)],
+            [self.area / Flat.max_area]
         ])
 
     def to_output_vector(self) -> np.ndarray:
 
         return np.array([
-            [float(self.cost)]
+            [Flat.encode_cost(self.cost)]
         ])
+
+    @staticmethod
+    def encode_cost(cost: int) -> float:
+        assert Flat.max_cost > 0
+        return cost / Flat.max_cost
+
+    @staticmethod
+    def decode_cost(cost: float) -> float:
+        assert Flat.max_cost > 0
+        return cost * Flat.max_cost
 
     def __str__(self) -> str:
         return "\n".join([
@@ -53,9 +77,9 @@ class Flat:
 
 def train(training_data: list) -> NeuralNetwork:
 
-    nn = NeuralNetwork(3, [5, 5, 1])
+    nn = NeuralNetwork(3, [3, 1])
 
-    nn.train(10000, training_data, 0.1, 200)
+    nn.train(100, training_data, 1, 10)
 
     return nn
 
@@ -121,6 +145,8 @@ def main() -> None:
     # last test_samples entries
     test_data = data[-test_samples:]
 
+    print("Max cost: %d" % Flat.max_cost)
+    print("Max area: %d" % Flat.max_area)
     print("Training data ready, training the neural network...")
 
     nn = train(training_data)
@@ -129,19 +155,33 @@ def main() -> None:
 
     mse_avg = 0
 
+    error_avg = 0
+
     for inp, out in test_data:
 
         predicted = nn.run(inp)
 
-        mse = (out[0][0] - predicted[0][0]) ** 2
+        error = out[0][0] - predicted[0][0]
 
+        print("Expected: %lf Predicted: %lf (%lf Euro) Error: %lf" % (
+            out[0][0],
+            predicted[0][0],
+            Flat.decode_cost(predicted[0][0]),
+            abs(error)
+        ))
+
+        mse = error * error
         mse_avg += mse
 
-        print("MSE: %lf" % mse)
+        error_avg += abs(out[0][0] - predicted[0][0])
+
+        print("Error: %lf MSE: %lf" % (abs(out[0][0] - predicted[0][0]), mse))
 
     mse_avg /= len(test_data)
+    error_avg /= len(test_data)
 
     print("Average MSE: %lf" % mse_avg)
+    print("Average Error: %lf (%lf Euro)" % (error_avg, Flat.decode_cost(error_avg)))
 
 
 if __name__ == "__main__":
