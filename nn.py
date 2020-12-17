@@ -3,11 +3,12 @@ import random
 
 
 def sigma(x: float) -> float:
-    return 1 / (1 + np.exp(x))
+    return 1 / (1 + np.exp(-x))
 
 
 def sigma_derivative(x: float) -> float:
-    return sigma(x) * (1 - sigma(x))
+    v = sigma(x)
+    return v * (1 - v)
 
 
 class NeuralNetwork:
@@ -26,45 +27,27 @@ class NeuralNetwork:
 
         for i in range(self.layer_count()):
 
-            layer_size = self.input_layer_size if i == 0 else layer_sizes[i - 1]
-            next_layer_size = layer_sizes[i]
+            previous_layer_size = self.input_layer_size if i == 0 else layer_sizes[i - 1]
+            layer_size = layer_sizes[i]
 
-            assert layer_size >= 1
+            assert previous_layer_size >= 1
 
             # weights[i][j] = weight of the connection between
-            # neuron i of the current layer and
-            # neuron j of the next layer
+            # neuron j of the previous layer and
+            # neuron i of the current layer
             # the columns of this matrix are therefore the weight vectors
-            weights = np.random.randn(next_layer_size, layer_size)
+            # and the rows are incoming weights for one neuron in the current layer
+            weights = np.random.randn(layer_size, previous_layer_size)
 
             self.layer_weights.append(weights)
 
             # biases of neurons in the current layer
-            biases = np.random.randn(next_layer_size, 1)
+            biases = np.random.randn(layer_size, 1)
 
             self.layer_biases.append(biases)
 
     def layer_count(self) -> int:
         return len(self.layer_sizes)
-
-    # def run(self, mat: np.ndarray) -> np.ndarray:
-    #
-    #     (n, m) = mat.shape
-    #
-    #     assert n == self.input_layer_size, "Invalid input vector length"
-    #
-    #     for i in range(self.layer_count()):
-    #
-    #         mat = self.layer_weights[i] @ mat
-    #
-    #         assert mat.shape[0] == self.layer_sizes[i]
-    #
-    #         # the linear combination with neuron connection weights has been computed
-    #         # so we only need to add bias terms and compute sigma of the result
-    #         for neuron in range(self.layer_sizes[i]):
-    #             mat[neuron] = sigma(mat[neuron] + self.layer_biases[i][neuron])
-    #
-    #     return mat
 
     def run(self, mat: np.ndarray) -> np.ndarray:
 
@@ -92,10 +75,50 @@ class NeuralNetwork:
 
     def compute_gradient(self, inp: np.ndarray, out: np.ndarray) -> (np.ndarray, np.ndarray):
 
+        assert inp.shape[0] == self.input_layer_size
+        assert inp.shape[1] == 1
+
         bias_gradient = [np.zeros(bias.shape) for bias in self.layer_biases]
         weight_gradient = [np.zeros(weight.shape) for weight in self.layer_weights]
 
-        # TODO
+        # first, we calculate the output of the network for this example
+        # and track a and z vectors
+        # z values a.k.a. biased weightet sums (without the activation function applied)
+        z_vectors = []
+        # activations (activation function applied to biased weightet sum)
+        a_vectors = [inp]
+
+        for i in range(self.layer_count()):
+
+            inp = self.layer_weights[i] @ inp + self.layer_biases[i]
+
+            z_vectors.append(inp)
+
+            # apply activation function
+            inp = sigma(inp)
+
+            a_vectors.append(inp)
+
+        # initialize partial derivatives for the last 2 layers
+        # to calculate other derivatives based on them
+
+        dC = (a_vectors[len(a_vectors) - 1] - out) * sigma_derivative(z_vectors[len(z_vectors) - 1])
+
+        bias_gradient[len(bias_gradient) - 1] = dC
+
+        weight_gradient[len(weight_gradient) - 1] = dC @ a_vectors[len(a_vectors) - 2].T
+
+        for layer in range(self.layer_count() - 2, -1, -1):
+
+            z = z_vectors[layer]
+
+            sp = sigma_derivative(z)
+
+            dC = (self.layer_weights[layer + 1].T @ dC) * sp
+
+            bias_gradient[layer] = dC
+
+            weight_gradient[layer] = dC @ a_vectors[layer - 1].T
 
         return bias_gradient, weight_gradient
 
@@ -122,7 +145,7 @@ class NeuralNetwork:
             # compute how the current training example "wants"
             # to change biases and weights of the neural network
 
-            d_bias, d_weight = self.compute_gradient(inp, out)
+            d_bias, d_weight = self.compute_gradient(inp.copy(), out.copy())
 
             for i in range(self.layer_count()):
                 weights_delta[i] += d_weight[i]

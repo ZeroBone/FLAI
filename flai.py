@@ -2,7 +2,7 @@ from nn import *
 
 
 def train():
-    nn = NeuralNetwork(2, [3, 1])
+    nn = NeuralNetwork(2, [1])
 
     training_data = [
         (
@@ -20,7 +20,7 @@ def train():
         (
             np.array([[1.0], [1.0]]),
             np.array([[1.0]])
-        ),
+        )
     ]
 
     nn.train(100, training_data, 50, 4)
