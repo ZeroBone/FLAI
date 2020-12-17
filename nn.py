@@ -77,6 +77,7 @@ class NeuralNetwork:
 
         assert inp.shape[0] == self.input_layer_size
         assert inp.shape[1] == 1
+        assert out.shape[1] == 1
 
         bias_gradient = [np.zeros(bias.shape) for bias in self.layer_biases]
         weight_gradient = [np.zeros(weight.shape) for weight in self.layer_weights]
@@ -108,17 +109,17 @@ class NeuralNetwork:
 
         weight_gradient[len(weight_gradient) - 1] = dC @ a_vectors[len(a_vectors) - 2].T
 
-        for layer in range(self.layer_count() - 2, -1, -1):
+        for layer in range(self.layer_count() - 2, 0, -1):
 
             z = z_vectors[layer]
 
-            sp = sigma_derivative(z)
+            d_sigma = sigma_derivative(z)
 
-            dC = (self.layer_weights[layer + 1].T @ dC) * sp
+            dC = (self.layer_weights[layer + 1].T @ dC) * d_sigma
 
             bias_gradient[layer] = dC
 
-            weight_gradient[layer] = dC @ a_vectors[layer - 1].T
+            weight_gradient[layer] = dC @ a_vectors[layer].T
 
         return bias_gradient, weight_gradient
 
@@ -145,7 +146,7 @@ class NeuralNetwork:
             # compute how the current training example "wants"
             # to change biases and weights of the neural network
 
-            d_bias, d_weight = self.compute_gradient(inp.copy(), out.copy())
+            d_bias, d_weight = self.compute_gradient(inp, out)
 
             for i in range(self.layer_count()):
                 weights_delta[i] += d_weight[i]
@@ -176,4 +177,4 @@ class NeuralNetwork:
             for start in range(0, length, batch_size):
                 self.gradient_descent(data[start:start + batch_size], learning_rate)
 
-            print("Training epoch %d ended!" % (e + 1))
+            # print("Training epoch %d ended!" % (e + 1))
