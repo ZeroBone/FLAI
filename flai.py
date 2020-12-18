@@ -83,7 +83,7 @@ def train(training_data: list) -> NeuralNetwork:
 
         nn.train(100, training_data, 0.1, 10)
 
-        print("Average MSE = %lf, Average Error = %lf" % run_test(nn, training_data, True))
+        print("MSE = %lf, Average Error = %lf" % run_test(nn, training_data, True))
 
     return nn
 
@@ -140,7 +140,7 @@ def read_data(file_name: str) -> list:
 
 def run_test(nn: NeuralNetwork, data: list, silent=False) -> (float, float):
 
-    mse_avg = 0
+    mse = 0
     error_avg = 0
 
     for inp, out in data:
@@ -148,8 +148,7 @@ def run_test(nn: NeuralNetwork, data: list, silent=False) -> (float, float):
 
         error = out[0][0] - predicted[0][0]
 
-        mse = error * error
-        mse_avg += mse
+        mse += error * error
 
         error_avg += abs(out[0][0] - predicted[0][0])
 
@@ -164,11 +163,10 @@ def run_test(nn: NeuralNetwork, data: list, silent=False) -> (float, float):
             mse
         ))
 
-    mse_avg /= len(data)
     error_avg /= len(data)
 
     if not silent:
-        print("Average MSE: %lf" % mse_avg)
+        print("MSE: %lf" % mse)
         print("Average Error: %lf (%lf Euro)" % (error_avg, Flat.decode_cost(error_avg)))
 
-    return mse_avg, error_avg
+    return mse, error_avg
