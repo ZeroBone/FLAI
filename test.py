@@ -8,6 +8,8 @@ def test(nn_name: str, dataset: str):
 
     data = read_data("data/%s.csv" % dataset)
 
+    data = data_to_vector_pairs(data)
+
     print("Starting tests...")
 
     run_test(nn, data)

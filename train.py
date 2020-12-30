@@ -6,6 +6,8 @@ def train_and_test(dataset: str) -> None:
 
     data = read_data("data/%s.csv" % dataset)
 
+    data = data_to_vector_pairs(data)
+
     test_samples = 100
 
     # everything except the last test_samples elements

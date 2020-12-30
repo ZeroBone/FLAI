@@ -124,18 +124,24 @@ def read_data(file_name: str) -> list:
                     int(row[area_column])
                 )
 
-                data.append(
-                    (
-                        flat.to_input_vector(),
-                        flat.to_output_vector()
-                    )
-                )
+                data.append(flat)
 
                 current_line += 1
 
         print("Read %d entries." % current_line)
 
     return data
+
+
+def data_to_vector_pairs(flats: list) -> list:
+
+    return [
+        (
+            flat.to_input_vector(),
+            flat.to_output_vector()
+        )
+        for flat in flats
+    ]
 
 
 def run_test(nn: NeuralNetwork, data: list, silent=False) -> (float, float):
